@@ -43,7 +43,7 @@ export default class View {
         }
 
         const existingItem = View._getExistingItemOnGrid({ id, baseElement })
-        if(existingItem) {
+        if (existingItem) {
             existingItem.innerHTML = htmlTemplate;
             return;
         }
