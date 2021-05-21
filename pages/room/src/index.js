@@ -1,27 +1,32 @@
-import { constants } from "../../_shared/constants.js"
-import RoomController from "./controller.js"
-import RoomSocketBuilder from "./util/roomSocket.js"
+  
+import { constants } from "../../_shared/constants.js";
+import RoomController from "./controller.js";
+import RoomSocketBuilder from "./util/roomSocket.js";
+import View from "./view.js";
 
-const room = {
-  id: '0001',
-  topic: 'Js Expert'
-};
+const urlParams = new URLSearchParams(window.location.search);
+const keys = ['id', 'topic'];
+const urlData = keys.map((key) => [key, urlParams.get(key)]);
 
 const user = {
-  img: 'https://cdn3.iconfinder.com/data/icons/user-avatars-1/512/users-10-3-512.png',
-  username: 'Hélvio Filho' + Date.now(),
-};
+    img: 'https://cdn3.iconfinder.com/data/icons/user-avatars-1/512/users-10-3-512.png',
+    username: 'Hélvio ' + Date.now()
+}
 
-const roomInfo = { user, room };
+const roomInfo = {
+    room: { ...Object.fromEntries(urlData) },
+    user
+}
 
 const socketBuilder = new RoomSocketBuilder({
-  socketUrl: constants.socketUrl,
-  namespace: constants.socketNamespaces.room
+    socketUrl: constants.socketUrl,
+    namespace: constants.socketNamespaces.room
 });
 
 const dependencies = {
-  socketBuilder,
-  roomInfo
-}
+    view: View,
+    socketBuilder,
+    roomInfo
+};
 
 await RoomController.initialize(dependencies);
