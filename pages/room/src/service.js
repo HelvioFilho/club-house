@@ -14,7 +14,7 @@ export default class RoomService {
     this.currentStream = new UserStream({
       stream: await this.media.getUserAudio(),
       isFake: false
-    })
+    });
   }
   setCurrentPeer(peer) {
     this.currentPeer = peer;
