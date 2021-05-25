@@ -1,6 +1,7 @@
-import Attendee from "../entities/attendee.js"
-import Room from "../entities/room.js"
-import { constants } from "../util/constants.js"
+import Attendee from "../entities/attendee.js";
+import Room from "../entities/room.js";
+import { constants } from "../util/constants.js";
+import CustomMap from "../util/customMap.js";
 
 export default class RoomsController {
   #users = new Map();
@@ -16,12 +17,42 @@ export default class RoomsController {
   #roomObserver() {
     return {
       notify: (rooms) => this.notifyRoomSubscribers(rooms)
-    }
+    };
   }
 
+  speakAnswer(socket, { answer, user }) {
+    const userId = user.id;
+    const currentUser = this.#users.get(userId);
+    const updatedUser = new Attendee({
+        ...currentUser,
+        isSpeaker: answer
+    });
+    this.#users.set(userId, updatedUser);
+
+    const roomId = user.roomId;
+    const room = this.rooms.get(roomId);
+    const userOnRoom = [...room.users.values()].find(({ id }) => id === userId);
+    room.users.delete(userOnRoom);
+    room.users.add(updatedUser);
+    this.rooms.set(roomId, room);
+
+    // volta para ele mesmo
+    socket.emit(constants.event.UPGRADE_USER_PERMISSION, updatedUser);
+    // notifica a sala inteira para ligar para esse novo speaker
+    this.#notifyUserProfileUpgrade(socket, roomId, updatedUser);
+
+}
+
+speakRequest(socket) {
+    const userId = socket.id;
+    const user = this.#users.get(userId);
+    const roomId = user.roomId;
+    const owner = this.rooms.get(roomId)?.owner;
+    socket.to(owner.id).emit(constants.event.SPEAK_REQUEST, user);
+}
   notifyRoomSubscribers(rooms) {
-    const event = constants.event.LOBBY_UPDATED
-    this.roomsPubSub.emit(event, [...rooms.values()])
+    const event = constants.event.LOBBY_UPDATED;
+    this.roomsPubSub.emit(event, [...rooms.values()]);
   }
 
   onNewConnection(socket) {
@@ -31,8 +62,8 @@ export default class RoomsController {
   }
 
   disconnect(socket) {
-    console.log('disconnect!!', socket.id)
-    this.#logoutUser(socket)
+    console.log('disconnect!!', socket.id);
+    this.#logoutUser(socket);
   }
 
   #logoutUser(socket) {
@@ -75,22 +106,22 @@ export default class RoomsController {
   }
 
   #notifyUserProfileUpgrade(socket, roomId, user) {
-    socket.to(roomId).emit(constants.event.UPGRADE_USER_PERMISSION, user)
+    socket.to(roomId).emit(constants.event.UPGRADE_USER_PERMISSION, user);
   }
 
   #getNewRoomOwner(room, socket) {
-    const users = [...room.users.values()]
-    const activeSpeakers = users.find(user => user.isSpeaker)
+    const users = [...room.users.values()];
+    const activeSpeakers = users.find(user => user.isSpeaker);
     // se quem desconectou era o dono, passa a liderança para o próximo
     // se não houver speakers, ele pega o attendee mais antigo
     const [newOwner] = activeSpeakers ? [activeSpeakers] : users;
     newOwner.isSpeaker = true;
 
-    const outdatedUser = this.#users.get(newOwner.id)
+    const outdatedUser = this.#users.get(newOwner.id);
     const updatedUser = new Attendee({
       ...outdatedUser,
       ...newOwner,
-    })
+    });
 
     this.#users.set(newOwner.id, updatedUser);
 
