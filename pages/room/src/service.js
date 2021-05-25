@@ -1,4 +1,4 @@
-import UserStream from './entities/userStream.js'
+import UserStream from './entities/userStream.js';
 export default class RoomService {
   constructor({ media }) {
     this.media = media
