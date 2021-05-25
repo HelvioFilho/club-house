@@ -1,4 +1,4 @@
-  
+
 import { constants } from "../../_shared/constants.js";
 import RoomController from "./controller.js";
 import RoomSocketBuilder from "./util/roomSocket.js";
@@ -18,15 +18,25 @@ const roomInfo = {
     user
 }
 
+const peerBuilder = new PeerBuilder({
+    peerConfig: constants.peerConfig
+})
+
 const socketBuilder = new RoomSocketBuilder({
     socketUrl: constants.socketUrl,
     namespace: constants.socketNamespaces.room
 });
 
+const roomService = new RoomService({
+    media: Media
+})
+
 const dependencies = {
     view: View,
     socketBuilder,
-    roomInfo
+    roomInfo,
+    roomService,
+    peerBuilder
 };
 
 await RoomController.initialize(dependencies);

@@ -50,4 +50,19 @@ export default class View {
 
         baseElement.innerHTML += htmlTemplate;
     }
+
+    static showUserFeatures(isSpeaker) {
+
+        // attendee
+        if (!isSpeaker) {
+            btnClap.classList.remove('hidden');
+            btnMicrophone.classList.add('hidden');
+            btnClipBoard.classList.add('hidden');
+            return;
+        }
+        // speaker
+        btnClap.classList.add('hidden');
+        btnMicrophone.classList.remove('hidden');
+        btnClipBoard.classList.remove('hidden');
+    }
 }
